@@ -1,0 +1,88 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map Builder - Research Tool</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Map Builder</h1>
+            <p>Research Tool for Map Constraints</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Controls Panel -->
+            <div class="controls-panel">
+                <div class="control-group">
+                    <h3>Map Dimensions</h3>
+                    <div class="dimension-controls">
+                        <label>Width: <input type="number" id="width"></label>
+                        <label>Height: <input type="number" id="height"></label>
+                        <button id="resize-btn">Resize</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>Tools</h3>
+                    <div class="tool-buttons">
+                        <button class="tool-btn active" data-tool="obstacle">Obstacle</button>
+                        <button class="tool-btn" data-tool="endpoint">Endpoint</button>
+                        <button class="tool-btn" data-tool="pickup">Pickup</button>
+                        <button class="tool-btn" data-tool="delivery">Delivery</button>
+                        <button class="tool-btn" data-tool="agent">Agent</button>
+                        <button class="tool-btn" data-tool="erase">Erase</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>Agents</h3>
+                    <div id="agents-list"></div>
+                    <button id="add-agent-btn">Add Agent</button>
+                </div>
+
+                <div class="control-group">
+                    <h3>Actions</h3>
+                    <button id="validate-btn">Validate Constraints</button>
+                    <button id="export-btn">Export YAML</button>
+                    <button id="clear-btn">Clear Map</button>
+                    <button id="load-example-btn">Load Example</button>
+                </div>
+            </div>
+
+            <!-- Map Grid -->
+            <div class="map-container">
+                <div class="map-info">
+                    <span id="current-tool">Current: Obstacle</span>
+                    <span id="cell-coords">Hover over grid</span>
+                </div>
+                <div id="map-grid" class="grid"></div>
+                <div id="validation-results" class="validation-results"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Agent Modal -->
+    <div id="agent-modal" class="modal">
+        <div class="modal-content">
+            <h3>Add Agent</h3>
+            <form id="agent-form">
+                <label>Name: <input type="text" id="agent-name" required></label>
+                <label>Start Position: 
+                    <input type="number" id="agent-x" placeholder="X" required>
+                    <input type="number" id="agent-y" placeholder="Y" required>
+                </label>
+                <div class="modal-buttons">
+                    <button type="submit">Add Agent</button>
+                    <button type="button" id="cancel-agent-btn">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map Setup - Research Tool</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="setup-container">
+        <div class="setup-card">
+            <div class="setup-header">
+                <h1>Map Builder</h1>
+            </div>
+
+            <form method="POST" action="{{ url_for('setup') }}" class="setup-form">
+                <div class="form-group">
+                    <h2>Configure Your Map</h2>
+                    <p class="form-description">
+                        Start by setting the dimensions of your map. You can always resize later.
+                    </p>
+                </div>
+
+                <div class="dimension-inputs">
+                    <div class="input-group">
+                        <label for="width">Number of Columns:</label>
+                        <input type="number" id="width" name="width" value="20" min="1" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="height">Number of Rows:</label>
+                        <input type="number" id="height" name="height" value="20" min="1" required>
+                    </div>
+                </div>
+
+                <div class="preview">
+                    <h3>Preview:</h3>
+                    <div id="grid-preview" class="grid-preview">
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">
+                        Create Map
+                    </button>
+                </div>
+
+                <div class="setup-info">
+                    <h4>About Map Constraints:</h4>
+                    <ul>
+                        <li>Each location must be within the map boundaries</li>
+                        <li>Obstacles cannot overlap with other location types</li>
+                        <li>Map must remain fully connected</li>
+                        <li>Need at least one non-task endpoint per agent</li>
+                    </ul>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='setup.js') }}"></script>
+</body>
+</html>
