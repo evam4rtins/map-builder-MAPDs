@@ -13,44 +13,28 @@ class MapBuilder {
                 delivery_locations: []
             }
         };
-        
-        console.log("🔄 MapBuilder constructor called");
         this.init();
     }
 
-    async init() {
-        console.log("🚀 MapBuilder initialization started");
-        
+    async init() {        
         try {
             await this.loadDimensions();
-            console.log("✅ Dimensions loaded:", this.width, "x", this.height);
-            
             this.setupEventListeners();
-            console.log("✅ Event listeners setup");
-            
             this.createGrid();
-            console.log("✅ Grid created");
-            
             this.updateDisplay();
-            console.log("✅ MapBuilder fully initialized");
-            
         } catch (error) {
-            console.error("❌ MapBuilder initialization failed:", error);
+            console.error("MapBuilder initialization failed:", error);
         }
     }
 
     async loadDimensions() {
         try {
-            console.log("📡 Fetching dimensions from API...");
-            const response = await fetch('/api/get_dimensions');
-            
+            const response = await fetch('/api/get_dimensions');            
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             
-            const dimensions = await response.json();
-            console.log("📋 Received dimensions:", dimensions);
-            
+            const dimensions = await response.json();            
             this.width = dimensions.width;
             this.height = dimensions.height;
             
@@ -58,11 +42,11 @@ class MapBuilder {
             if (dimensionsElement) {
                 dimensionsElement.textContent = `${this.width}×${this.height}`;
             } else {
-                console.warn("⚠️ current-dimensions element not found");
+                console.warn("current-dimensions element not found");
             }
             
         } catch (error) {
-            console.error('❌ Failed to load dimensions:', error);
+            console.error('Failed to load dimensions:', error);
             // Use default dimensions as fallback
             this.width = 20;
             this.height = 20;
@@ -70,12 +54,9 @@ class MapBuilder {
     }
 
     setupEventListeners() {
-        console.log("🔧 Setting up event listeners...");
-        
-        // Tool buttons
         const toolButtons = document.querySelectorAll('.tool-btn');
         if (toolButtons.length === 0) {
-            console.warn("⚠️ No tool buttons found");
+            console.warn("No tool buttons found");
         } else {
             toolButtons.forEach(btn => {
                 btn.addEventListener('click', (e) => {
@@ -93,8 +74,8 @@ class MapBuilder {
         this.setupButton('add-agent-btn', () => this.showAgentModal());
         this.setupButton('resize-btn', () => this.showResizeModal());
         this.setupButton('resize-btn', () => this.resizeMap());
-    
         this.updateResizeInputs();
+
         // Agent form
         const agentForm = document.getElementById('agent-form');
         if (agentForm) {
@@ -121,26 +102,18 @@ class MapBuilder {
         const heightInput = document.getElementById('height');
         
         if (!widthInput || !heightInput) {
-            console.error('❌ Resize inputs not found');
+            console.error('Resize inputs not found');
             return;
         }
         
         const newWidth = parseInt(widthInput.value);
         const newHeight = parseInt(heightInput.value);
         
-        // Validate inputs
         if (isNaN(newWidth) || isNaN(newHeight)) {
             alert('Please enter valid numbers for width and height');
             return;
         }
-        
-        if (newWidth < 5 || newWidth > 100 || newHeight < 5 || newHeight > 100) {
-            alert('Dimensions must be between 5 and 100');
-            return;
-        }
-        
-        console.log(`🔄 Resizing map from ${this.width}x${this.height} to ${newWidth}x${newHeight}`);
-        
+                
         try {
             const response = await fetch('/api/resize_dimensions', {
                 method: 'POST',
@@ -150,31 +123,17 @@ class MapBuilder {
                     height: newHeight
                 })
             });
-            
             const result = await response.json();
-            
             if (result.status === 'success') {
-                // Update local dimensions
                 this.width = newWidth;
                 this.height = newHeight;
-                
-                // Clear elements that are outside new boundarie                
-                // Recreate the grid
                 this.createGrid();
-                
-                // Update display
                 this.updateDisplay();
-                
-                // Show success message
-                this.showNotification(`Map resized to ${newWidth}×${newHeight}`, 'success');
-                
-                console.log("✅ Map resized successfully");
             } else {
                 throw new Error(result.message || 'Failed to resize map');
             }
         } catch (error) {
-            console.error('❌ Resize error:', error);
-            this.showNotification(`Resize failed: ${error.message}`, 'error');
+            console.error('Resize error:', error);
         }
     }    
 
@@ -182,24 +141,18 @@ class MapBuilder {
         const button = document.getElementById(id);
         if (button) {
             button.addEventListener('click', handler);
-        } else {
-            console.warn(`⚠️ Button with id '${id}' not found`);
-        }
+        } 
     }
 
     setTool(tool) {
-        console.log("🎯 Setting tool to:", tool);
         this.currentTool = tool;
-        
         document.querySelectorAll('.tool-btn').forEach(btn => {
             btn.classList.remove('active');
         });
-        
         const activeButton = document.querySelector(`[data-tool="${tool}"]`);
         if (activeButton) {
             activeButton.classList.add('active');
         }
-        
         const toolElement = document.getElementById('current-tool');
         if (toolElement) {
             toolElement.textContent = `Current: ${this.getToolName(tool)}`;
@@ -221,12 +174,9 @@ class MapBuilder {
     createGrid() {
         const grid = document.getElementById('map-grid');
         if (!grid) {
-            console.error('❌ map-grid element not found!');
+            console.error('map-grid element not found!');
             return;
         }
-
-        console.log(`🔄 Creating grid: ${this.width} x ${this.height}`);
-        
         // Clear existing grid
         grid.innerHTML = '';
         
@@ -264,7 +214,7 @@ class MapBuilder {
                 cell.style.transition = 'background-color 0.2s';
                 
                 // Add coordinates for debugging (remove in production)
-                cell.textContent = `${x},${y}`;
+                //cell.textContent = `${x},${y}`;
                 
                 cell.addEventListener('click', () => this.handleCellClick(x, y));
                 cell.addEventListener('mouseenter', (e) => {
@@ -278,13 +228,10 @@ class MapBuilder {
                     const cellType = this.getCellType(x, y);
                     e.target.style.backgroundColor = this.getCellColor(cellType);
                 });
-                
                 row.appendChild(cell);
             }
             grid.appendChild(row);
         }
-        
-        console.log(`✅ Grid created with ${this.width * this.height} cells`);
         this.syncGridFromData();
     }
 
@@ -301,7 +248,7 @@ class MapBuilder {
     }
 
     handleCellClick(x, y) {
-        console.log(`🖱️ Cell clicked: (${x}, ${y}) with tool: ${this.currentTool}`);
+        //console.log(`Cell clicked: (${x}, ${y}) with tool: ${this.currentTool}`);
         
         if (this.currentTool === 'erase') {
             this.removeCellFromAllTypes(x, y);
@@ -313,10 +260,9 @@ class MapBuilder {
             const typeKey = this.getDataKeyForTool(this.currentTool);
             if (typeKey && !this.data.map[typeKey].some(pos => pos[0] === x && pos[1] === y)) {
                 this.data.map[typeKey].push([x, y]);
-                console.log(`✅ Added ${this.currentTool} at (${x}, ${y})`);
+                //console.log(`Added ${this.currentTool} at (${x}, ${y})`);
             }
         }
-        
         this.syncGridFromData();
     }
 
@@ -333,11 +279,7 @@ class MapBuilder {
     removeCellFromAllTypes(x, y) {
         const types = ['obstacles', 'non_task_endpoints', 'pickup_locations', 'delivery_locations'];
         types.forEach(type => {
-            const initialLength = this.data.map[type].length;
             this.data.map[type] = this.data.map[type].filter(pos => !(pos[0] === x && pos[1] === y));
-            if (this.data.map[type].length !== initialLength) {
-                console.log(`🗑️ Removed from ${type} at (${x}, ${y})`);
-            }
         });
     }
 
@@ -350,9 +292,7 @@ class MapBuilder {
         return 'empty';
     }
 
-    syncGridFromData() {
-        console.log("🔄 Syncing grid from data...");
-        
+    syncGridFromData() {        
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
                 const cell = document.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
@@ -368,7 +308,6 @@ class MapBuilder {
     }
 
     showAgentModal(x = null, y = null) {
-        console.log("👤 Showing agent modal at:", x, y);
         const modal = document.getElementById('agent-modal');
         if (modal) {
             if (x !== null && y !== null) {
@@ -377,12 +316,11 @@ class MapBuilder {
             }
             modal.style.display = 'block';
         } else {
-            console.error('❌ Agent modal not found');
+            console.error('Agent modal not found');
         }
     }
 
     hideAgentModal() {
-        console.log("👤 Hiding agent modal");
         const modal = document.getElementById('agent-modal');
         if (modal) {
             modal.style.display = 'none';
@@ -395,7 +333,7 @@ class MapBuilder {
         const x = parseInt(document.getElementById('agent-x').value);
         const y = parseInt(document.getElementById('agent-y').value);
         
-        console.log(`👤 Adding agent: ${name} at (${x}, ${y})`);
+        //console.log(`Adding agent: ${name} at (${x}, ${y})`);
         
         if (x >= this.width || y >= this.height) {
             alert('Agent position is outside map boundaries');
@@ -415,7 +353,7 @@ class MapBuilder {
     updateAgentsList() {
         const list = document.getElementById('agents-list');
         if (!list) {
-            console.warn('⚠️ agents-list element not found');
+            console.warn('agents-list element not found');
             return;
         }
         
@@ -433,13 +371,11 @@ class MapBuilder {
     }
 
     removeAgent(name) {
-        console.log(`👤 Removing agent: ${name}`);
         this.data.agents = this.data.agents.filter(agent => agent.name !== name);
         this.syncGridFromData();
     }
 
     async validateMap() {
-        console.log("🔍 Validating map...");
         try {
             const response = await fetch('/api/save_map', {
                 method: 'POST',
@@ -449,14 +385,14 @@ class MapBuilder {
             const result = await response.json();
             this.showValidationResults(result);
         } catch (error) {
-            console.error('❌ Validation error:', error);
+            console.error('Validation error:', error);
             this.showValidationResults({ status: 'error', errors: ['Network error: ' + error.message] });
         }
     }
 
 
     async exportMap() {
-        console.log("💾 Exporting map...");
+        console.log("Exporting map...");
         try {
             const response = await fetch('/api/save_map', {
                 method: 'POST',
@@ -472,13 +408,13 @@ class MapBuilder {
                 this.showValidationResults(result);
             }
         } catch (error) {
-            console.error('❌ Export error:', error);
+            console.error('Export error:', error);
             this.showValidationResults({ status: 'error', errors: ['Export failed: ' + error.message] });
         }
     }
 
     downloadYAML(yamlContent, filename) {
-        console.log(`📥 Downloading: ${filename}`);
+        console.log(`Downloading: ${filename}`);
         const blob = new Blob([yamlContent], { type: 'application/yaml' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -493,7 +429,7 @@ class MapBuilder {
     showValidationResults(result) {
         const resultsDiv = document.getElementById('validation-results');
         if (!resultsDiv) {
-            console.warn('⚠️ validation-results element not found');
+            console.warn('validation-results element not found');
             return;
         }
         
@@ -513,7 +449,6 @@ class MapBuilder {
 
     clearMap() {
         if (confirm('Are you sure you want to clear the entire map?')) {
-            console.log("🗑️ Clearing map...");
             this.data = {
                 agents: [],
                 map: { obstacles: [], non_task_endpoints: [], pickup_locations: [], delivery_locations: [] }
@@ -523,26 +458,24 @@ class MapBuilder {
     }
 
     async loadExample() {
-        console.log("📚 Loading example...");
         try {
             const response = await fetch('/api/load_example');
             const exampleData = await response.json();
             this.data = exampleData;
             this.syncGridFromData();
         } catch (error) {
-            console.error('❌ Load example error:', error);
+            console.error('Load example error:', error);
             alert('Failed to load example: ' + error.message);
         }
     }
 
     async resetDimensions() {
         if (confirm('Are you sure you want to reset map dimensions? This will clear the current map.')) {
-            console.log("🔄 Resetting dimensions...");
             try {
                 await fetch('/api/reset_dimensions', { method: 'POST' });
                 window.location.href = '/setup';
             } catch (error) {
-                console.error('❌ Reset dimensions error:', error);
+                console.error('Reset dimensions error:', error);
                 alert('Failed to reset dimensions: ' + error.message);
             }
         }
@@ -553,7 +486,6 @@ class MapBuilder {
         if (dimensionsElement) {
             dimensionsElement.textContent = `${this.width}×${this.height}`;
         }
-        console.log(`📊 Display updated: ${this.width}x${this.height}`);
     }
 }
 
@@ -561,7 +493,6 @@ class MapBuilder {
 let mapBuilder;
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("📄 DOM fully loaded, initializing MapBuilder...");
     mapBuilder = new MapBuilder();
 });
 
@@ -569,7 +500,7 @@ document.addEventListener('DOMContentLoaded', () => {
 setTimeout(() => {
     const grid = document.getElementById('map-grid');
     if (grid) {
-        console.log("🔍 Grid check:", {
+        console.log("Grid check:", {
             exists: true,
             children: grid.children.length,
             visible: grid.offsetParent !== null,
@@ -581,10 +512,10 @@ setTimeout(() => {
         
         // Force visible styling if grid is empty
         if (grid.children.length === 0) {
-            console.warn("⚠️ Grid is empty, applying emergency styling");
+            console.warn("Grid is empty, applying emergency styling");
             grid.innerHTML = '<div style="padding: 20px; text-align: center; color: red; font-weight: bold;">GRID FAILED TO LOAD - Check console for errors</div>';
         }
     } else {
-        console.error("❌ map-grid element not found in DOM");
+        console.error("map-grid element not found in DOM");
     }
 }, 1000);

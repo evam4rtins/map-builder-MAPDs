@@ -33,7 +33,6 @@ class MapSetup {
         this.width = parseInt(document.getElementById('width').value);
         this.height = parseInt(document.getElementById('height').value);
         
-        // Ensure positive values
         this.width = Math.max(1, this.width);
         this.height = Math.max(1, this.height);
         

@@ -20,36 +20,26 @@ def setup():
             session['width'] = width
             session['height'] = height
             session.modified = True  # Ensure session is saved
-            print(f"✅ Saved dimensions to session: {width}x{height}")
             return redirect(url_for('builder'))
         except Exception as e:
-            print(f"❌ Error saving dimensions: {e}")
             return render_template('setup.html', error=str(e))
     
     return render_template('setup.html')
 
 @app.route('/builder')
 def builder():
-    # Debug: Check what's in session
-    print(f"🔍 Session data in /builder: width={session.get('width')}, height={session.get('height')}")
-    
     if not session.get('width') or not session.get('height'):
-        print("❌ No dimensions found, redirecting to setup")
         return redirect(url_for('setup'))
-    
-    print(f"✅ Rendering builder with dimensions: {session['width']}x{session['height']}")
     return render_template('index.html')
 
 @app.route('/api/get_dimensions')
 def get_dimensions():
     width = session.get('width', 20)
     height = session.get('height', 20)
-    print(f"📡 API returning dimensions: {width}x{height}")
     return jsonify({
         'width': width,
         'height': height
     })
-
 
 @app.route('/api/resize_dimensions', methods=['POST'])
 def resize_dimensions():
@@ -59,16 +49,10 @@ def resize_dimensions():
         new_width = int(data.get('width', 20))
         new_height = int(data.get('height', 20))
         
-        # Validate dimensions
-        if new_width < 5 or new_width > 100 or new_height < 5 or new_height > 100:
-            return jsonify({'status': 'error', 'message': 'Dimensions must be between 5 and 100'})
-        
-        # Store new dimensions in session
         session['width'] = new_width
         session['height'] = new_height
         session.modified = True
         
-        print(f"✅ Resized dimensions to: {new_width}x{new_height}")
         return jsonify({
             'status': 'success', 
             'message': f'Map resized to {new_width}x{new_height}',
@@ -77,7 +61,6 @@ def resize_dimensions():
         })
         
     except Exception as e:
-        print(f"❌ Error resizing dimensions: {e}")
         return jsonify({'status': 'error', 'message': str(e)})
                        
 @app.route('/api/reset_dimensions', methods=['POST'])
@@ -91,8 +74,6 @@ def reset_dimensions():
 def save_map():
     try:
         data = request.json
-        
-        # Validate the map
         errors = validate_map(data)
         if errors:
             return jsonify({"status": "error", "errors": errors})
