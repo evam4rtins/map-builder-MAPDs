@@ -51,6 +51,35 @@ def get_dimensions():
     })
 
 
+@app.route('/api/resize_dimensions', methods=['POST'])
+def resize_dimensions():
+    """Resize the map dimensions"""
+    try:
+        data = request.json
+        new_width = int(data.get('width', 20))
+        new_height = int(data.get('height', 20))
+        
+        # Validate dimensions
+        if new_width < 5 or new_width > 100 or new_height < 5 or new_height > 100:
+            return jsonify({'status': 'error', 'message': 'Dimensions must be between 5 and 100'})
+        
+        # Store new dimensions in session
+        session['width'] = new_width
+        session['height'] = new_height
+        session.modified = True
+        
+        print(f"✅ Resized dimensions to: {new_width}x{new_height}")
+        return jsonify({
+            'status': 'success', 
+            'message': f'Map resized to {new_width}x{new_height}',
+            'width': new_width,
+            'height': new_height
+        })
+        
+    except Exception as e:
+        print(f"❌ Error resizing dimensions: {e}")
+        return jsonify({'status': 'error', 'message': str(e)})
+                       
 @app.route('/api/reset_dimensions', methods=['POST'])
 def reset_dimensions():
     """Reset dimensions and clear session"""

@@ -91,7 +91,10 @@ class MapBuilder {
         this.setupButton('clear-btn', () => this.clearMap());
         this.setupButton('load-example-btn', () => this.loadExample());
         this.setupButton('add-agent-btn', () => this.showAgentModal());
-
+        this.setupButton('resize-btn', () => this.showResizeModal());
+        this.setupButton('resize-btn', () => this.resizeMap());
+    
+        this.updateResizeInputs();
         // Agent form
         const agentForm = document.getElementById('agent-form');
         if (agentForm) {
@@ -103,6 +106,77 @@ class MapBuilder {
 
         this.setupButton('cancel-agent-btn', () => this.hideAgentModal());
     }
+
+    updateResizeInputs() {
+        // Pre-fill the resize inputs with current dimensions
+        const widthInput = document.getElementById('width');
+        const heightInput = document.getElementById('height');
+        
+        if (widthInput) widthInput.value = this.width;
+        if (heightInput) heightInput.value = this.height;
+    }
+    
+    async resizeMap() {
+        const widthInput = document.getElementById('width');
+        const heightInput = document.getElementById('height');
+        
+        if (!widthInput || !heightInput) {
+            console.error('❌ Resize inputs not found');
+            return;
+        }
+        
+        const newWidth = parseInt(widthInput.value);
+        const newHeight = parseInt(heightInput.value);
+        
+        // Validate inputs
+        if (isNaN(newWidth) || isNaN(newHeight)) {
+            alert('Please enter valid numbers for width and height');
+            return;
+        }
+        
+        if (newWidth < 5 || newWidth > 100 || newHeight < 5 || newHeight > 100) {
+            alert('Dimensions must be between 5 and 100');
+            return;
+        }
+        
+        console.log(`🔄 Resizing map from ${this.width}x${this.height} to ${newWidth}x${newHeight}`);
+        
+        try {
+            const response = await fetch('/api/resize_dimensions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    width: newWidth,
+                    height: newHeight
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.status === 'success') {
+                // Update local dimensions
+                this.width = newWidth;
+                this.height = newHeight;
+                
+                // Clear elements that are outside new boundarie                
+                // Recreate the grid
+                this.createGrid();
+                
+                // Update display
+                this.updateDisplay();
+                
+                // Show success message
+                this.showNotification(`Map resized to ${newWidth}×${newHeight}`, 'success');
+                
+                console.log("✅ Map resized successfully");
+            } else {
+                throw new Error(result.message || 'Failed to resize map');
+            }
+        } catch (error) {
+            console.error('❌ Resize error:', error);
+            this.showNotification(`Resize failed: ${error.message}`, 'error');
+        }
+    }    
 
     setupButton(id, handler) {
         const button = document.getElementById(id);
@@ -379,6 +453,7 @@ class MapBuilder {
             this.showValidationResults({ status: 'error', errors: ['Network error: ' + error.message] });
         }
     }
+
 
     async exportMap() {
         console.log("💾 Exporting map...");
