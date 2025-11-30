@@ -264,10 +264,12 @@ header p {
 .tool-btn {
     padding: 10px;
     border: 2px solid #bdc3c7;
-    background: white;
+    background: #ecf0f1;
     border-radius: 5px;
     cursor: pointer;
     transition: all 0.3s;
+    color: #2c3e50;
+    font-weight: 600;
 }
 
 .tool-btn.active {
@@ -277,6 +279,12 @@ header p {
 }
 
 .tool-btn:hover {
+    border-color: #2980b9;
+    background: #d5dbdb;
+}
+
+.tool-btn.active:hover {
+    background: #2980b9;
     border-color: #2980b9;
 }
 
@@ -290,6 +298,7 @@ button {
     transition: background 0.3s;
     width: 100%;
     margin-bottom: 8px;
+    font-weight: 600;
 }
 
 button:hover {
@@ -394,6 +403,12 @@ button#clear-btn:hover {
     margin-top: 15px;
 }
 
+.modal-buttons button {
+    width: auto;
+    margin: 0;
+    flex: 1;
+}
+
 #agents-list {
     margin-bottom: 10px;
 }
@@ -405,4 +420,35 @@ button#clear-btn:hover {
     border-radius: 5px;
     display: flex;
     justify-content: space-between;
+}
+
+.agent-item button {
+    width: auto;
+    padding: 2px 8px;
+    margin: 0;
+    background: #e74c3c;
+    border-radius: 3px;
+}
+
+.agent-item button:hover {
+    background: #c0392b;
+}
+
+.dimension-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.dimension-controls label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dimension-controls input {
+    width: 60px;
+    padding: 5px;
+    border: 1px solid #bdc3c7;
+    border-radius: 3px;
 }

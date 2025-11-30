@@ -337,7 +337,7 @@ class MapBuilder {
         
         //console.log(`Adding agent: ${name} at (${x}, ${y})`);
         
-        if (x >= this.width || y >= this.height) {
+        if (x >= this.height || y >= this.width || x < 0 || y < 0) {
             alert('Agent position is outside map boundaries');
             return;
         }
