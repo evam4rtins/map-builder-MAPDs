@@ -177,10 +177,9 @@ class MapBuilder {
             console.error('map-grid element not found!');
             return;
         }
-        // Clear existing grid
+        
         grid.innerHTML = '';
         
-        // Apply visible styling to grid container
         grid.style.border = '3px solid #007bff';
         grid.style.background = '#f8f9fa';
         grid.style.padding = '10px';
@@ -188,17 +187,21 @@ class MapBuilder {
         grid.style.minHeight = '50px';
         grid.style.overflow = 'auto';
         
-        for (let y = 0; y < this.height; y++) {
+        // Create rows from top to bottom (row decreases as we go down)
+        for (let displayRow = 0; displayRow < this.height; displayRow++) {
             const row = document.createElement('div');
             row.className = 'grid-row';
             row.style.display = 'flex';
             row.style.justifyContent = 'center';
             
-            for (let x = 0; x < this.width; x++) {
+            for (let col = 0; col < this.width; col++) {
                 const cell = document.createElement('div');
                 cell.className = 'cell empty';
-                cell.dataset.x = x;
-                cell.dataset.y = y;
+                
+                const logicalRow = this.height - 1 - displayRow;
+                const logicalCol = col;
+                cell.dataset.row = logicalRow;
+                cell.dataset.col = logicalCol; 
                 
                 // Apply visible styling to each cell
                 cell.style.width = `${this.cellSize}px`;
@@ -213,19 +216,16 @@ class MapBuilder {
                 cell.style.cursor = 'pointer';
                 cell.style.transition = 'background-color 0.2s';
                 
-                // Add coordinates for debugging (remove in production)
-                //cell.textContent = `${x},${y}`;
-                
-                cell.addEventListener('click', () => this.handleCellClick(x, y));
+                cell.addEventListener('click', () => this.handleCellClick(logicalRow, logicalCol));
                 cell.addEventListener('mouseenter', (e) => {
                     e.target.style.backgroundColor = '#e9ecef';
                     const coordsElement = document.getElementById('cell-coords');
                     if (coordsElement) {
-                        coordsElement.textContent = `(${x}, ${y})`;
+                        coordsElement.textContent = `(${logicalRow}, ${logicalCol})`;
                     }
                 });
                 cell.addEventListener('mouseleave', (e) => {
-                    const cellType = this.getCellType(x, y);
+                    const cellType = this.getCellType(logicalRow, logicalCol);
                     e.target.style.backgroundColor = this.getCellColor(cellType);
                 });
                 row.appendChild(cell);
@@ -233,7 +233,8 @@ class MapBuilder {
             grid.appendChild(row);
         }
         this.syncGridFromData();
-    }
+    }    
+    
 
     getCellColor(cellType) {
         const colors = {
@@ -293,11 +294,12 @@ class MapBuilder {
     }
 
     syncGridFromData() {        
-        for (let y = 0; y < this.height; y++) {
+        for (let displayY = 0; displayY < this.height; displayY++) {
+            const logicalY = this.height - 1 - displayY;
             for (let x = 0; x < this.width; x++) {
-                const cell = document.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
+                const cell = document.querySelector(`.cell[data-x="${x}"][data-y="${logicalY}"]`);
                 if (cell) {
-                    const cellType = this.getCellType(x, y);
+                    const cellType = this.getCellType(x, logicalY);
                     cell.className = 'cell ' + cellType;
                     cell.style.backgroundColor = this.getCellColor(cellType);
                     cell.style.color = cellType === 'obstacle' ? '#ffffff' : '#000000';

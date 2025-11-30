@@ -19,7 +19,7 @@ def setup():
             height = int(request.form.get('height', 20))
             session['width'] = width
             session['height'] = height
-            session.modified = True  # Ensure session is saved
+            session.modified = True  
             return redirect(url_for('builder'))
         except Exception as e:
             return render_template('setup.html', error=str(e))
@@ -78,28 +78,72 @@ def save_map():
         if errors:
             return jsonify({"status": "error", "errors": errors})
         
-        # Convert to YAML format
+        # Convert to YAML format with specific structure
         yaml_data = {
-            "agents": data["agents"],
+            "agents": [
+                {"start": agent["start"], "name": agent["name"]} 
+                for agent in data["agents"]
+            ],
             "map": {
-                "dimensions": [session['width'], session['height']],
-                "obstacles": [[x, y] for x, y in data["map"]["obstacles"]],
-                "non_task_endpoints": [[x, y] for x, y in data["map"]["non_task_endpoints"]],
-                "pickup_locations": [[x, y] for x, y in data["map"]["pickup_locations"]],
-                "delivery_locations": [[x, y] for x, y in data["map"]["delivery_locations"]]
+                "dimensions": [session['height'], session['width']],  # [rows, columns]
+                "obstacles": [[row, col] for row, col in data["map"]["obstacles"]],
+                "non_task_endpoints": [[row, col] for row, col in data["map"]["non_task_endpoints"]],
+                "pickup_locations": [[row, col] for row, col in data["map"]["pickup_locations"]],
+                "delivery_locations": [[row, col] for row, col in data["map"]["delivery_locations"]]
             }
         }
         
-        # Return YAML as downloadable content
-        yaml_output = yaml.dump(yaml_data, default_flow_style=False, sort_keys=False)
+        # Custom YAML formatting to match the desired structure
+        yaml_output = format_yaml_output(yaml_data)
+        
         return jsonify({
             "status": "success", 
             "yaml": yaml_output,
-            "filename": f"map_{session['width']}x{session['height']}.yaml"
+            "filename": f"map_{session['height']}r_{session['width']}c.yaml"
         })
         
     except Exception as e:
         return jsonify({"status": "error", "errors": [str(e)]})
+
+def format_yaml_output(data):
+    """Format YAML output to match the desired structure"""
+    lines = []
+    
+    # Format agents section
+    lines.append("agents:")
+    for agent in data["agents"]:
+        lines.append(f"-   start: [{agent['start'][0]}, {agent['start'][1]}]")
+        lines.append(f"    name: {agent['name']}")
+    
+    # Format map section
+    lines.append("")
+    lines.append("map:")
+    lines.append("    dimensions: [{}, {}]".format(data["map"]["dimensions"][0], data["map"]["dimensions"][1]))
+    
+    # Format obstacles with !!python/tuple
+    lines.append("    obstacles:")
+    for obstacle in data["map"]["obstacles"]:
+        lines.append("    - !!python/tuple [{}, {}]".format(obstacle[0], obstacle[1]))
+    
+    # Format non_task_endpoints with !!python/tuple
+    lines.append("")
+    lines.append("    non_task_endpoints:")
+    for endpoint in data["map"]["non_task_endpoints"]:
+        lines.append("    - !!python/tuple [{}, {}]".format(endpoint[0], endpoint[1]))
+    
+    # Format pickup_locations with regular lists
+    lines.append("")
+    lines.append("    pickup_locations:")
+    for pickup in data["map"]["pickup_locations"]:
+        lines.append("    - [{}, {}]".format(pickup[0], pickup[1]))
+    
+    # Format delivery_locations with regular lists
+    lines.append("")
+    lines.append("    delivery_locations:")
+    for delivery in data["map"]["delivery_locations"]:
+        lines.append("    - [{}, {}]".format(delivery[0], delivery[1]))
+    
+    return "\n".join(lines)
 
 @app.route('/api/load_example', methods=['GET'])
 def load_example():
@@ -116,7 +160,6 @@ def load_example():
     return jsonify(example_data)
 
 def validate_map(data):
-    """Validate map against constraints"""
     errors = []
     width = session.get('width', 20)
     height = session.get('height', 20)
@@ -125,17 +168,17 @@ def validate_map(data):
     if len(data['map']['non_task_endpoints']) < len(data['agents']):
         errors.append(f"Not enough non-task endpoints: {len(data['map']['non_task_endpoints'])} endpoints for {len(data['agents'])} agents")
     
-    # Check if all agent positions are valid
+    # Check if all agent positions are valid (coordinates already in logical system)
     for agent in data['agents']:
         x, y = agent['start']
-        if x >= width or y >= height:
-            errors.append(f"Agent {agent['name']} is outside map boundaries")
+        if y < 0 or y >= width or x < 0 or x >= height:
+            errors.append(f"Agent {agent['name']} at ({x}, {y}) is outside map boundaries (0-{width-1}, 0-{height-1})")
     
     # Check if all special locations are within map
     for loc_type in ['obstacles', 'non_task_endpoints', 'pickup_locations', 'delivery_locations']:
         for x, y in data['map'][loc_type]:
-            if x >= width or y >= height:
-                errors.append(f"{loc_type} location ({x}, {y}) is outside map boundaries")
+            if y < 0 or y >= width or x < 0 or x >= height:
+                errors.append(f"{loc_type} location ({x}, {y}) is outside map boundaries (0-{width-1}, 0-{height-1})")
     
     return errors
 

@@ -52,7 +52,6 @@ class MapSetup {
         
         preview.innerHTML = '';
         
-        // Calculate cell size - smaller for larger grids
         const maxDisplaySize = 200;
         const cellSize = Math.max(2, Math.floor(maxDisplaySize / Math.max(this.width, this.height)));
         
