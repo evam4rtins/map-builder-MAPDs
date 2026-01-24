@@ -113,44 +113,48 @@ def save_map():
 
 
 def format_yaml_output(data):
-    """Format YAML output to match the desired structure"""
+    """Format YAML output to match professor style and fully sorted"""
     lines = []
-    
-    # Format agents section
+
+    sorted_agents = sorted(data["agents"], key=lambda a: (a["start"][0], a["start"][1]))
+
     lines.append("agents:")
-    for agent in data["agents"]:
+    for agent in sorted_agents:
         lines.append(f"-   start: [{agent['start'][0]}, {agent['start'][1]}]")
         lines.append(f"    name: {agent['name']}")
-    
-    # Format map section
+
     lines.append("")
     lines.append("map:")
-    lines.append("    dimensions: [{}, {}]".format(data["map"]["dimensions"][0], data["map"]["dimensions"][1]))
-    
-    # Format obstacles with !!python/tuple
+    lines.append("    dimensions: [{}, {}]".format(
+        data["map"]["dimensions"][0], data["map"]["dimensions"][1]
+    ))
+
+    sorted_obstacles = sorted(data["map"]["obstacles"], key=lambda x: (x[0], x[1]))
     lines.append("    obstacles:")
-    for obstacle in data["map"]["obstacles"]:
+    for obstacle in sorted_obstacles:
         lines.append("    - !!python/tuple [{}, {}]".format(obstacle[0], obstacle[1]))
-    
-    # Format non_task_endpoints with !!python/tuple
+
+    sorted_endpoints = sorted(data["map"]["non_task_endpoints"], key=lambda x: (x[0], x[1]))
     lines.append("")
     lines.append("    non_task_endpoints:")
-    for endpoint in data["map"]["non_task_endpoints"]:
+    for endpoint in sorted_endpoints:
         lines.append("    - !!python/tuple [{}, {}]".format(endpoint[0], endpoint[1]))
-    
-    # Format pickup_locations with regular lists
+
+    sorted_pickups = sorted(data["map"]["pickup_locations"], key=lambda x: (x[0], x[1]))
     lines.append("")
     lines.append("    pickup_locations:")
-    for pickup in data["map"]["pickup_locations"]:
+    for pickup in sorted_pickups:
         lines.append("    - [{}, {}]".format(pickup[0], pickup[1]))
-    
-    # Format delivery_locations with regular lists
+
+    sorted_deliveries = sorted(data["map"]["delivery_locations"], key=lambda x: (x[0], x[1]))
     lines.append("")
     lines.append("    delivery_locations:")
-    for delivery in data["map"]["delivery_locations"]:
+    for delivery in sorted_deliveries:
         lines.append("    - [{}, {}]".format(delivery[0], delivery[1]))
-    
+
     return "\n".join(lines)
+
+
 
 @app.route('/api/load_example', methods=['GET'])
 def load_example():
