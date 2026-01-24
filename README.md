@@ -1,14 +1,42 @@
 # Map Builder – Research Tool
 
-A web-based tool for creating and managing maps with agents, obstacles, and task locations. Built with Flask and vanilla JavaScript.
+A web-based tool for creating and managing grid-based maps with agents, obstacles, and task locations. Designed to support research workflows (e.g., MAPF, MAPD, task allocation) and export structured map definitions in YAML format.
+
+Built with **Flask** and **vanilla JavaScript**.
+
+---
 
 ## Features
 
-- **Interactive Map Grid:** Create maps with customizable dimensions
-- **Multiple Tools:** Place obstacles, endpoints, pickup/delivery locations, and agents
-- **Real-time Validation:** Validate map constraints before export
-- **YAML Export:** Export maps in YAML format for research use
-- **Agent Management:** Add and manage multiple agents with unique start positions
+- **Interactive Map Grid**  
+  Create and edit 2D grid maps with customizable dimensions.
+
+- **Multiple Editing Tools**  
+  Place obstacles, non-task endpoints, pickup locations, delivery locations, and agent start positions.
+
+- **Visual Encoding of Map Elements**  
+  Distinct geometric shapes and colors are used to clearly differentiate map elements 
+
+- **Real-time Validation**  
+  Validate map constraints before export to ensure consistency and correctness.
+
+- **YAML Export**  
+  Export maps in YAML format for use in downstream planners, simulators, or benchmarks.
+
+- **Agent Management**  
+  Add, remove, and manage multiple agents with unique identifiers and start positions.
+
+
+## Visual Legend
+
+| Element               | Representation   |
+|----------------------|------------------|
+| Empty cell            | White square     |
+| Obstacle              | Black square     |
+| Agent start           | Orange circle    |
+| Non-task endpoint     | Green circle     |
+| Pickup location       | Red square       |
+| Delivery location     | Blue triangle    |
 
 ## Project Structure
 
