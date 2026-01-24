@@ -203,17 +203,33 @@ class MapBuilder {
         this.syncGridFromData();
     }
     
-
+    renderMarker(cell, cellType) {
+        cell.innerHTML = '';
+    
+        if (cellType === 'empty') return;
+    
+        if (cellType === 'obstacle') {
+            cell.style.backgroundColor = '#000';
+            return;
+        }
+    
+        const marker = document.createElement('div');
+    
+        if (cellType === 'agent') {
+            marker.className = 'marker circle agent';
+        } else if (cellType === 'endpoint') {
+            marker.className = 'marker circle endpoint';
+        } else if (cellType === 'pickup') {
+            marker.className = 'marker pickup';
+        } else if (cellType === 'delivery') {
+            marker.className = 'marker triangle delivery';
+        }
+    
+        cell.appendChild(marker);
+    }
+    
     getCellColor(cellType) {
-        const colors = {
-            empty: '#ffffff',        // white grid
-            obstacle: '#000000',     // black cells
-            endpoint: '#2ecc71',     // green (non-task endpoints)
-            agent: '#f39c12',        // orange agents
-            pickup: '#9b59b6',       // purple pickup (shape-based)
-            delivery: '#3498db'      // blue delivery (shape-based)
-        };
-        return colors[cellType] || '#ffffff';
+        return cellType === 'obstacle' ? '#000000' : '#ffffff';
     }
 
     handleCellClick(x, y) {        
@@ -261,21 +277,23 @@ class MapBuilder {
     syncGridFromData() {
         for (let displayY = 0; displayY < this.height; displayY++) {
             const logicalY = this.height - 1 - displayY;
+    
             for (let x = 0; x < this.width; x++) {
                 const cell = document.querySelector(
                     `.cell[data-row="${x}"][data-col="${logicalY}"]`
                 );
     
-                if (cell) {
-                    const cellType = this.getCellType(x, logicalY);
-                    cell.className = 'cell ' + cellType;
-                    cell.style.backgroundColor = this.getCellColor(cellType);
-                    cell.style.color = cellType === 'obstacle' ? '#ffffff' : '#000000';
-                }
+                if (!cell) continue;
+    
+                const cellType = this.getCellType(x, logicalY);
+                cell.className = 'cell';
+                cell.style.backgroundColor = '#ffffff';
+                this.renderMarker(cell, cellType);
             }
         }
         this.updateAgentsList();
     }
+    
     
 
     showAgentModal(x = null, y = null) {

@@ -456,3 +456,41 @@ button#clear-btn:hover {
     border-radius: 3px;
 }
 
+.marker {
+    width: 70%;
+    height: 70%;
+    pointer-events: none;
+  }
+  
+  .marker.circle {
+    border-radius: 50%;
+  }
+  
+  .marker.agent {
+    background: orange;
+  }
+  
+  .marker.endpoint {
+    background: green;
+  }
+  
+  .marker.triangle {
+    width: 0;
+    height: 0;
+    border-left: 14px solid transparent;
+    border-right: 14px solid transparent;
+    border-bottom: 24px solid;
+  }
+  
+  .marker.pickup {
+    background-color: red;
+  }
+  
+  .marker.delivery {
+    border-bottom-color: blue;
+  }
+  
+  .cell.obstacle {
+    background: black;
+  }
+  
