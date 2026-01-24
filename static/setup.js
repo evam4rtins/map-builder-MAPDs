@@ -1,11 +1,17 @@
 class MapSetup {
     constructor() {
+        const widthInput = document.getElementById('width');
+        const heightInput = document.getElementById('height');
+
+        this.width = parseInt(widthInput.value) || 20;
+        this.height = parseInt(heightInput.value) || 20;
         this.init();
+
     }
 
     init() {
-        this.setupEventListeners();
         this.updatePreview();
+        this.setupEventListeners();
     }
 
     setupEventListeners() {
@@ -17,10 +23,6 @@ class MapSetup {
             this.updateDimensions();
         });
 
-        document.getElementById('default-btn').addEventListener('click', () => {
-            this.setDefaultDimensions();
-        });
-
         document.querySelector('form').addEventListener('submit', (e) => {
             if (!this.validateDimensions()) {
                 e.preventDefault();
@@ -30,6 +32,7 @@ class MapSetup {
     }
 
     updateDimensions() {
+        console.log("UPDATE dimensions")
         this.width = parseInt(document.getElementById('width').value);
         this.height = parseInt(document.getElementById('height').value);
         
@@ -47,6 +50,7 @@ class MapSetup {
     }
 
     updatePreview() {
+        console.log("UPDATE")
         const preview = document.getElementById('grid-preview');
         const previewInfo = document.getElementById('preview-info');
         
@@ -55,7 +59,6 @@ class MapSetup {
         const maxDisplaySize = 200;
         const cellSize = Math.max(2, Math.floor(maxDisplaySize / Math.max(this.width, this.height)));
         
-        // Create grid preview
         for (let y = 0; y < this.height; y++) {
             const row = document.createElement('div');
             row.className = 'preview-row';

@@ -74,35 +74,43 @@ def reset_dimensions():
 def save_map():
     try:
         data = request.json
+        force = data.get('force', False)  # 👈 NEW
+
         errors = validate_map(data)
-        if errors:
-            return jsonify({"status": "error", "errors": errors})
-        
-        # Convert to YAML format with specific structure
+
+        if errors and not force:
+            return jsonify({
+                "status": "error",
+                "errors": errors,
+                "can_force": True  
+            })
+
         yaml_data = {
             "agents": [
                 {"start": agent["start"], "name": agent["name"]} 
                 for agent in data["agents"]
             ],
             "map": {
-                "dimensions": [session['height'], session['width']],  # [rows, columns]
+                "dimensions": [session['height'], session['width']],
                 "obstacles": [[row, col] for row, col in data["map"]["obstacles"]],
                 "non_task_endpoints": [[row, col] for row, col in data["map"]["non_task_endpoints"]],
                 "pickup_locations": [[row, col] for row, col in data["map"]["pickup_locations"]],
                 "delivery_locations": [[row, col] for row, col in data["map"]["delivery_locations"]]
             }
         }
-        
+
         yaml_output = format_yaml_output(yaml_data)
-        
+
         return jsonify({
-            "status": "success", 
+            "status": "success",
             "yaml": yaml_output,
-            "filename": f"map_{session['height']}r_{session['width']}c.yaml"
+            "filename": f"map_{session['height']}r_{session['width']}c.yaml",
+            "forced": bool(errors)
         })
-        
+
     except Exception as e:
         return jsonify({"status": "error", "errors": [str(e)]})
+
 
 def format_yaml_output(data):
     """Format YAML output to match the desired structure"""
@@ -173,7 +181,7 @@ def validate_map(data):
     pickups = set((x, y) for x, y in data['map']['pickup_locations'])
     deliveries = set((x, y) for x, y in data['map']['delivery_locations'])
     
-    # 1. Boundary checks using vectorized approach
+    # 1. Boundary checks 
     errors.extend(check_boundaries(data, width, height))
     
     # 2. Overlap checks
@@ -182,13 +190,13 @@ def validate_map(data):
     # 3. Agent-specific constraints
     errors.extend(check_agent_constraints(data['agents'], endpoints, width, height))
     
-    # 4. Connectivity checks (only if basic constraints pass)
+    # 4. Connectivity checks 
     if not errors:
         # 4a. Check overall map connectivity (no isolated islands)
         if not is_map_connected(obstacles, width, height):
             errors.append("Map is not fully connected - obstacles create isolated areas that cannot be reached")
         
-        # 4b. Check all 6 pairwise connectivity constraints from PDF
+        # 4b. Check all 6 pairwise connectivity constraints from constraints
         errors.extend(check_all_connectivity_constraints(
             obstacles, endpoints, pickups, deliveries, width, height
         ))
@@ -232,6 +240,10 @@ def check_agent_constraints(agents, endpoints, width, height):
     errors = []
     agent_names = set()
     
+    # At least one endpoint per agent
+    if len(endpoints) < len(agents):
+        errors.append(f"Not enough non-task endpoints: {len(endpoints)} endpoints for {len(agents)} agents")
+
     for agent in agents:
         # Unique names
         if agent['name'] in agent_names:
@@ -243,10 +255,6 @@ def check_agent_constraints(agents, endpoints, width, height):
         if start_pos not in endpoints:
             errors.append(f"Agent {agent['name']} start position {start_pos} must be a non-task endpoint")
     
-    # At least one endpoint per agent
-    if len(endpoints) < len(agents):
-        errors.append(f"Not enough non-task endpoints: {len(endpoints)} endpoints for {len(agents)} agents")
-    
     return errors
 
 # ============================================================================
@@ -255,8 +263,8 @@ def check_agent_constraints(agents, endpoints, width, height):
 
 def check_all_connectivity_constraints(obstacles, endpoints, pickups, deliveries, width, height):
     """
-    Check ALL 6 connectivity constraints from the PDF.
-    For EACH PAIR, path must avoid ALL OTHER special locations.
+    Check all 6 connectivity constraints.
+    For each pair, path must avoid all other special locations.
     """
     errors = []
     
@@ -267,42 +275,42 @@ def check_all_connectivity_constraints(obstacles, endpoints, pickups, deliveries
     
     all_special_locations = obstacles_set.union(endpoints_set, pickups_set, deliveries_set)
     
-    # 1. Endpoint ↔ Endpoint pairs
+    # 1. Endpoint - Endpoint pairs
     errors.extend(check_pairs_strict(
         endpoints_set, "non-task endpoints",
         all_special_locations, obstacles_set, endpoints_set, pickups_set, deliveries_set,
         width, height
     ))
     
-    # 2. Pickup ↔ Pickup pairs
+    # 2. Pickup - Pickup pairs
     errors.extend(check_pairs_strict(
         pickups_set, "pickup locations",
         all_special_locations, obstacles_set, endpoints_set, pickups_set, deliveries_set,
         width, height
     ))
     
-    # 3. Delivery ↔ Delivery pairs
+    # 3. Delivery - Delivery pairs
     errors.extend(check_pairs_strict(
         deliveries_set, "delivery locations",
         all_special_locations, obstacles_set, endpoints_set, pickups_set, deliveries_set,
         width, height
     ))
     
-    # 4. Pickup ↔ Delivery pairs 
+    # 4. Pickup - Delivery pairs 
     errors.extend(check_between_sets_strict(
         pickups_set, deliveries_set, "pickup and delivery locations",
         all_special_locations, obstacles_set, endpoints_set, pickups_set, deliveries_set,
         width, height
     ))
     
-    # 5. Pickup ↔ Endpoint pairs 
+    # 5. Pickup - Endpoint pairs 
     errors.extend(check_between_sets_strict(
         pickups_set, endpoints_set, "pickup and endpoint locations",
         all_special_locations, obstacles_set, endpoints_set, pickups_set, deliveries_set,
         width, height
     ))
     
-    # 6. Delivery ↔ Endpoint pairs 
+    # 6. Delivery - Endpoint pairs 
     errors.extend(check_between_sets_strict(
         deliveries_set, endpoints_set, "delivery and endpoint locations",
         all_special_locations, obstacles_set, endpoints_set, pickups_set, deliveries_set,
@@ -316,8 +324,7 @@ def check_pairs_strict(locations_set, location_name, all_special_locations,
                        obstacles_set, endpoints_set, pickups_set, deliveries_set,
                        width, height):
     """
-    Check connectivity between all pairs WITHIN the same set.
-    Example: endpoint ↔ endpoint, pickup ↔ pickup, delivery ↔ delivery
+    Check connectivity between all pairs within the same set.
     """
     errors = []
     locations_list = list(locations_set)
@@ -330,10 +337,9 @@ def check_pairs_strict(locations_set, location_name, all_special_locations,
             start = locations_list[i]
             end = locations_list[j]
             
-            # What to avoid: ALL special locations EXCEPT these two
             avoid_set = all_special_locations.copy()
-            avoid_set.discard(start)  # Remove start if it's in the set
-            avoid_set.discard(end)    # Remove end if it's in the set
+            avoid_set.discard(start)  
+            avoid_set.discard(end)    
             
             # Check if path exists
             if not has_path_avoiding(start, end, avoid_set, width, height):
@@ -349,27 +355,22 @@ def check_between_sets_strict(set1, set2, location_name, all_special_locations,
                               obstacles_set, endpoints_set, pickups_set, deliveries_set,
                               width, height):
     """
-    Check connectivity between ALL pairs from set1 to set2.
-    Example: pickup ↔ delivery, pickup ↔ endpoint, delivery ↔ endpoint
+    Check connectivity between all pairs from set1 to set2.
     """
     errors = []
     
-    # If either set is empty, no pairs to check
     if not set1 or not set2:
         return errors
     
     for start in set1:
         for end in set2:
-            # Skip if same location (shouldn't happen between different sets)
             if start == end:
                 continue
-            
-            # What to avoid: ALL special locations EXCEPT these two
+
             avoid_set = all_special_locations.copy()
-            avoid_set.discard(start)  # Remove start if it's in the set
-            avoid_set.discard(end)    # Remove end if it's in the set
+            avoid_set.discard(start)  
+            avoid_set.discard(end)   
             
-            # Check if path exists
             if not has_path_avoiding(start, end, avoid_set, width, height):
                 errors.append(
                     f"No path between {location_name} {start} and {end} "
@@ -382,14 +383,12 @@ def check_between_sets_strict(set1, set2, location_name, all_special_locations,
 def has_path_avoiding(start, end, avoid_set, width, height):
     """
     BFS that finds path avoiding specified cells.
-    The path CAN include start and end positions.
+    The path can include start and end positions.
     Returns True if path exists, False otherwise.
     """
-    # If start or end is itself an avoided cell (shouldn't happen with our logic)
     if start in avoid_set or end in avoid_set:
         return False
     
-    # Same cell
     if start == end:
         return True
     
@@ -405,23 +404,18 @@ def has_path_avoiding(start, end, avoid_set, width, height):
         for dx, dy in directions:
             nx, ny = x + dx, y + dy
             
-            # Check boundaries
             if not (0 <= nx < height and 0 <= ny < width):
                 continue
             
-            # Check if visited
             if visited[nx][ny]:
                 continue
             
-            # Check if this is an avoided cell
             if (nx, ny) in avoid_set:
                 continue
             
-            # Found the destination!
             if (nx, ny) == end:
                 return True
             
-            # Mark as visited and continue searching
             visited[nx][ny] = True
             queue.append((nx, ny))
     
@@ -429,13 +423,12 @@ def has_path_avoiding(start, end, avoid_set, width, height):
 
 def is_map_connected(obstacles, width, height):
     """
-    Check if the entire map is connected (no islands created by obstacles).
+    Check if the entire map is connected.
     Returns True if all non-obstacle cells are reachable from each other.
     """
     # Create visited matrix
     visited = [[False] * width for _ in range(height)]
     
-    # Find first non-obstacle cell to start BFS
     start = None
     for x in range(height):
         for y in range(width):
@@ -451,7 +444,7 @@ def is_map_connected(obstacles, width, height):
     # BFS from start position
     queue = [start]
     visited[start[0]][start[1]] = True
-    count = 1  # Count reachable non-obstacle cells
+    count = 1  
     
     directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
     
@@ -461,24 +454,19 @@ def is_map_connected(obstacles, width, height):
         for dx, dy in directions:
             nx, ny = x + dx, y + dy
             
-            # Check boundaries
             if not (0 <= nx < height and 0 <= ny < width):
                 continue
             
-            # Check if visited
             if visited[nx][ny]:
                 continue
             
-            # Check if obstacle
             if (nx, ny) in obstacles:
                 continue
             
-            # This is a reachable non-obstacle cell
             visited[nx][ny] = True
             queue.append((nx, ny))
             count += 1
     
-    # Count total non-obstacle cells
     total_non_obstacles = (width * height) - len(obstacles)
     return count == total_non_obstacles
 

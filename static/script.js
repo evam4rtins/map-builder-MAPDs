@@ -1,7 +1,5 @@
 class MapBuilder {
     constructor() {
-        this.width = 20;
-        this.height = 20;
         this.currentTool = 'obstacle';
         this.cellSize = 25;
         this.data = {
@@ -173,67 +171,40 @@ class MapBuilder {
 
     createGrid() {
         const grid = document.getElementById('map-grid');
-        if (!grid) {
-            console.error('map-grid element not found!');
-            return;
-        }
-        
+        if (!grid) return;
+    
         grid.innerHTML = '';
-        
-        grid.style.border = '3px solid #007bff';
-        grid.style.background = '#f8f9fa';
-        grid.style.padding = '10px';
-        grid.style.margin = '10px 0';
-        grid.style.minHeight = '50px';
-        grid.style.overflow = 'auto';
-        
-        // Create rows from top to bottom (row decreases as we go down)
-        for (let displayRow = 0; displayRow < this.height; displayRow++) {
-            const row = document.createElement('div');
-            row.className = 'grid-row';
-            row.style.display = 'flex';
-            row.style.justifyContent = 'center';
-            
+    
+        grid.style.gridTemplateColumns = `repeat(${this.width}, 1fr)`;
+        grid.style.gridTemplateRows = `repeat(${this.height}, 1fr)`;
+    
+        for (let row = 0; row < this.height; row++) {
             for (let col = 0; col < this.width; col++) {
+                const logicalRow = this.height - 1 - row;
+                const logicalCol = col;
+    
                 const cell = document.createElement('div');
                 cell.className = 'cell empty';
-                
-                const logicalRow = this.height - 1 - displayRow;
-                const logicalCol = col;
                 cell.dataset.row = logicalRow;
-                cell.dataset.col = logicalCol; 
-                
-                // Apply visible styling to each cell
-                cell.style.width = `${this.cellSize}px`;
-                cell.style.height = `${this.cellSize}px`;
-                cell.style.border = '1px solid #666';
-                cell.style.backgroundColor = '#ffffff';
-                cell.style.margin = '1px';
-                cell.style.display = 'flex';
-                cell.style.alignItems = 'center';
-                cell.style.justifyContent = 'center';
-                cell.style.fontSize = '8px';
-                cell.style.cursor = 'pointer';
-                cell.style.transition = 'background-color 0.2s';
-                
+                cell.dataset.col = logicalCol;
+    
                 cell.addEventListener('click', () => this.handleCellClick(logicalRow, logicalCol));
                 cell.addEventListener('mouseenter', (e) => {
                     e.target.style.backgroundColor = '#e9ecef';
-                    const coordsElement = document.getElementById('cell-coords');
-                    if (coordsElement) {
-                        coordsElement.textContent = `(${logicalRow}, ${logicalCol})`;
-                    }
+                    const coords = document.getElementById('cell-coords');
+                    if (coords) coords.textContent = `(${logicalRow}, ${logicalCol})`;
                 });
                 cell.addEventListener('mouseleave', (e) => {
-                    const cellType = this.getCellType(logicalRow, logicalCol);
-                    e.target.style.backgroundColor = this.getCellColor(cellType);
+                    const type = this.getCellType(logicalRow, logicalCol);
+                    e.target.style.backgroundColor = this.getCellColor(type);
                 });
-                row.appendChild(cell);
+    
+                grid.appendChild(cell);
             }
-            grid.appendChild(row);
         }
+    
         this.syncGridFromData();
-    }    
+    }
     
 
     getCellColor(cellType) {
@@ -393,27 +364,51 @@ class MapBuilder {
     }
 
 
-    async exportMap() {
-        console.log("Exporting map...");
+    async exportMap(force = false) {
         try {
+            const payload = {
+                ...this.data,
+                force: force
+            };
+    
             const response = await fetch('/api/save_map', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(this.data)
+                body: JSON.stringify(payload)
             });
+    
             const result = await response.json();
-            
             if (result.status === 'success') {
                 this.downloadYAML(result.yaml, result.filename);
-                this.showValidationResults({ status: 'success', errors: [] });
-            } else {
-                this.showValidationResults(result);
+                if (!force) {
+                    this.showValidationResults({ status: 'success', errors: [] });
+                }
+    
+                return;
             }
+    
+            this.showValidationResults(result);
+    
+            if (result.can_force && !force) {
+                const proceed = confirm(
+                    "The map has validation errors.\n\nDo you want to ignore constraints and save anyway?"
+                );
+    
+                if (proceed) {
+                    await this.exportMap(true);
+                }
+            }
+    
         } catch (error) {
             console.error('Export error:', error);
-            this.showValidationResults({ status: 'error', errors: ['Export failed: ' + error.message] });
+            this.showValidationResults({
+                status: 'error',
+                errors: ['Export failed: ' + error.message]
+            });
         }
     }
+    
+    
 
     downloadYAML(yamlContent, filename) {
         console.log(`Downloading: ${filename}`);
