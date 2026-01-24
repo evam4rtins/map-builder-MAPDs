@@ -10,7 +10,6 @@ body {
     color: #333;
 }
 
-/* Setup Screen Styles */
 .setup-container {
     display: flex;
     justify-content: center;
@@ -189,7 +188,6 @@ body {
     line-height: 1.4;
 }
 
-/* Main App Styles */
 .container {
     max-width: 1400px;
     margin: 0 auto;

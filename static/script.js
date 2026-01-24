@@ -31,7 +31,7 @@ class MapBuilder {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             const dimensions = await response.json();            
             this.width = dimensions.width;
             this.height = dimensions.height;
@@ -293,8 +293,6 @@ class MapBuilder {
         }
         this.updateAgentsList();
     }
-    
-    
 
     showAgentModal(x = null, y = null) {
         const modal = document.getElementById('agent-modal');
@@ -343,7 +341,6 @@ class MapBuilder {
             console.warn('agents-list element not found');
             return;
         }
-        
         list.innerHTML = '';
         
         this.data.agents.forEach(agent => {
@@ -376,7 +373,6 @@ class MapBuilder {
             this.showValidationResults({ status: 'error', errors: ['Network error: ' + error.message] });
         }
     }
-
 
     async exportMap(force = false) {
         try {
@@ -421,8 +417,6 @@ class MapBuilder {
             });
         }
     }
-    
-    
 
     downloadYAML(yamlContent, filename) {
         console.log(`Downloading: ${filename}`);
@@ -500,7 +494,6 @@ class MapBuilder {
     }
 }
 
-// Initialize MapBuilder when DOM is fully loaded
 let mapBuilder;
 
 document.addEventListener('DOMContentLoaded', () => {

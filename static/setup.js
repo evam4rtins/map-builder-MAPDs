@@ -6,7 +6,6 @@ class MapSetup {
         this.width = parseInt(widthInput.value) || 20;
         this.height = parseInt(heightInput.value) || 20;
         this.init();
-
     }
 
     init() {
@@ -32,7 +31,6 @@ class MapSetup {
     }
 
     updateDimensions() {
-        console.log("UPDATE dimensions")
         this.width = parseInt(document.getElementById('width').value);
         this.height = parseInt(document.getElementById('height').value);
         
@@ -50,7 +48,6 @@ class MapSetup {
     }
 
     updatePreview() {
-        console.log("UPDATE")
         const preview = document.getElementById('grid-preview');
         const previewInfo = document.getElementById('preview-info');
         

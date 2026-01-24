@@ -23,7 +23,6 @@ def setup():
             return redirect(url_for('builder'))
         except Exception as e:
             return render_template('setup.html', error=str(e))
-    
     return render_template('setup.html')
 
 @app.route('/builder')
@@ -72,6 +71,7 @@ def reset_dimensions():
 
 @app.route('/api/save_map', methods=['POST'])
 def save_map():
+    """Save map in YAML file"""
     try:
         data = request.json
         force = data.get('force', False)  # 👈 NEW
@@ -113,7 +113,6 @@ def save_map():
 
 
 def format_yaml_output(data):
-    """Format YAML output to match professor style and fully sorted"""
     lines = []
 
     sorted_agents = sorted(data["agents"], key=lambda a: (a["start"][0], a["start"][1]))
@@ -153,22 +152,6 @@ def format_yaml_output(data):
         lines.append("    - [{}, {}]".format(delivery[0], delivery[1]))
 
     return "\n".join(lines)
-
-
-
-@app.route('/api/load_example', methods=['GET'])
-def load_example():
-    """Load the example map structure"""
-    example_data = {
-        "agents": [{"name": "agent1", "start": [0, 0]}],
-        "map": {
-            "obstacles": [],
-            "non_task_endpoints": [[0, 0]],
-            "pickup_locations": [],
-            "delivery_locations": []
-        }
-    }
-    return jsonify(example_data)
 
 # ============================================================================
 # VALIDATION FUNCTIONS
@@ -430,7 +413,6 @@ def is_map_connected(obstacles, width, height):
     Check if the entire map is connected.
     Returns True if all non-obstacle cells are reachable from each other.
     """
-    # Create visited matrix
     visited = [[False] * width for _ in range(height)]
     
     start = None
