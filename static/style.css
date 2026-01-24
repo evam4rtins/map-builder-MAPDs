@@ -362,11 +362,6 @@ button#clear-btn:hover {
 }
 
 .cell.empty { background: white; }
-.cell.obstacle { background: #2c3e50; }
-.cell.endpoint { background: #27ae60; }
-.cell.pickup { background: #f39c12; }
-.cell.delivery { background: #9b59b6; }
-.cell.agent { background: #e74c3c; }
 
 .validation-results {
     margin-top: 20px;
@@ -460,3 +455,4 @@ button#clear-btn:hover {
     border: 1px solid #bdc3c7;
     border-radius: 3px;
 }
+

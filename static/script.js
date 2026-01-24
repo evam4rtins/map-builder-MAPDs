@@ -45,7 +45,6 @@ class MapBuilder {
             
         } catch (error) {
             console.error('Failed to load dimensions:', error);
-            // Use default dimensions as fallback
             this.width = 20;
             this.height = 20;
         }
@@ -87,7 +86,6 @@ class MapBuilder {
     }
 
     updateResizeInputs() {
-        // Pre-fill the resize inputs with current dimensions
         const widthInput = document.getElementById('width');
         const heightInput = document.getElementById('height');
         
@@ -202,26 +200,23 @@ class MapBuilder {
                 grid.appendChild(cell);
             }
         }
-    
         this.syncGridFromData();
     }
     
 
     getCellColor(cellType) {
         const colors = {
-            'empty': '#ffffff',
-            'obstacle': '#333333',
-            'endpoint': '#007bff',
-            'pickup': '#28a745',
-            'delivery': '#dc3545',
-            'agent': '#ffc107'
+            empty: '#ffffff',        // white grid
+            obstacle: '#000000',     // black cells
+            endpoint: '#2ecc71',     // green (non-task endpoints)
+            agent: '#f39c12',        // orange agents
+            pickup: '#9b59b6',       // purple pickup (shape-based)
+            delivery: '#3498db'      // blue delivery (shape-based)
         };
         return colors[cellType] || '#ffffff';
     }
 
-    handleCellClick(x, y) {
-        //console.log(`Cell clicked: (${x}, ${y}) with tool: ${this.currentTool}`);
-        
+    handleCellClick(x, y) {        
         if (this.currentTool === 'erase') {
             this.removeCellFromAllTypes(x, y);
         } else if (this.currentTool === 'agent') {
@@ -232,7 +227,6 @@ class MapBuilder {
             const typeKey = this.getDataKeyForTool(this.currentTool);
             if (typeKey && !this.data.map[typeKey].some(pos => pos[0] === x && pos[1] === y)) {
                 this.data.map[typeKey].push([x, y]);
-                //console.log(`Added ${this.currentTool} at (${x}, ${y})`);
             }
         }
         this.syncGridFromData();
@@ -264,11 +258,14 @@ class MapBuilder {
         return 'empty';
     }
 
-    syncGridFromData() {        
+    syncGridFromData() {
         for (let displayY = 0; displayY < this.height; displayY++) {
             const logicalY = this.height - 1 - displayY;
             for (let x = 0; x < this.width; x++) {
-                const cell = document.querySelector(`.cell[data-x="${x}"][data-y="${logicalY}"]`);
+                const cell = document.querySelector(
+                    `.cell[data-row="${x}"][data-col="${logicalY}"]`
+                );
+    
                 if (cell) {
                     const cellType = this.getCellType(x, logicalY);
                     cell.className = 'cell ' + cellType;
@@ -279,6 +276,7 @@ class MapBuilder {
         }
         this.updateAgentsList();
     }
+    
 
     showAgentModal(x = null, y = null) {
         const modal = document.getElementById('agent-modal');
@@ -305,9 +303,7 @@ class MapBuilder {
         const name = document.getElementById('agent-name').value;
         const x = parseInt(document.getElementById('agent-x').value);
         const y = parseInt(document.getElementById('agent-y').value);
-        
-        //console.log(`Adding agent: ${name} at (${x}, ${y})`);
-        
+                
         if (x >= this.height || y >= this.width || x < 0 || y < 0) {
             alert('Agent position is outside map boundaries');
             return;
@@ -492,27 +488,3 @@ let mapBuilder;
 document.addEventListener('DOMContentLoaded', () => {
     mapBuilder = new MapBuilder();
 });
-
-// Additional debug: Check if grid is visible after a short delay
-setTimeout(() => {
-    const grid = document.getElementById('map-grid');
-    if (grid) {
-        console.log("Grid check:", {
-            exists: true,
-            children: grid.children.length,
-            visible: grid.offsetParent !== null,
-            dimensions: {
-                width: grid.offsetWidth,
-                height: grid.offsetHeight
-            }
-        });
-        
-        // Force visible styling if grid is empty
-        if (grid.children.length === 0) {
-            console.warn("Grid is empty, applying emergency styling");
-            grid.innerHTML = '<div style="padding: 20px; text-align: center; color: red; font-weight: bold;">GRID FAILED TO LOAD - Check console for errors</div>';
-        }
-    } else {
-        console.error("map-grid element not found in DOM");
-    }
-}, 1000);
