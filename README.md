@@ -2,10 +2,6 @@
 
 A web-based tool for creating and managing grid-based maps with agents, obstacles, and task locations. Designed to support research workflows (e.g., MAPF, MAPD, task allocation) and export structured map definitions in YAML format.
 
-Built with **Flask** and **vanilla JavaScript**.
-
----
-
 ## Features
 
 - **Interactive Map Grid**  
